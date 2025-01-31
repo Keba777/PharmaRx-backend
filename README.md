@@ -18,24 +18,20 @@ The PharmaRx Backend is a crucial component of the PharmaRx platform, responsibl
 
 1. Clone the repository:
    ```
-   git clone https://github.com/Keba777/PharmaRx
-2. Navigate to the backend folder:
-```
-cd backend
-```
-3. Build the Docker containers:
-```
-npm run docker:build
-```
-4. Start the Docker containers:
-```
-npm run docker:up
-```
-5. To stop the containers:
-```
-npm run docker:down
-```
+   git clone https://github.com/Keba777/PharmaRx-backend.git
+
+2. Build the Docker containers:
+   ```
+   npm run docker:build
+
+3. Start the Docker containers:
+   ```
+   npm run docker:up
+
+4. To stop the containers:
+   ```
+   npm run docker:down
+
 6. To view logs:
-```
-npm run docker:logs
-```
+   ```
+   npm run docker:logs
