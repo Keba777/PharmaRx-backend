@@ -9,8 +9,6 @@ dotenv.config({
   path: path.join(__dirname, "../../.env"),
 });
 
-const OTPStorage: Record<string, string> = {};
-
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   const { firstName, email, phone, role, address } = req.body;
 
@@ -28,7 +26,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       email,
       "Welcome to PharmaRx - Registration Successful",
       `Dear ${firstName},\n\nWelcome to PharmaRx! 🎉\n\nYour account has been successfully registered.\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nPharmaRx Team`
-    );    
+    );
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
@@ -48,7 +46,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    OTPStorage[email] = otp;
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save();
 
     await sendEmail(email, "Your Login OTP Code", `Your OTP is: ${otp}`);
 
@@ -62,19 +64,21 @@ export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
   const { email, otp } = req.body;
 
   try {
-    if (!OTPStorage[email] || OTPStorage[email] !== otp) {
+    const user = await User.findOne({ email });
+
+    if (!user || !user.otp || !user.otpExpires) {
       res.status(400).json({ message: "Invalid OTP" });
       return;
     }
 
-    delete OTPStorage[email];
-
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      res.status(400).json({ message: "User not found. Please register first." });
+    if (user.otp !== otp || new Date() > user.otpExpires) {
+      res.status(400).json({ message: "Invalid or expired OTP" });
       return;
     }
+
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
 
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
